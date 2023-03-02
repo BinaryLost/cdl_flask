@@ -25,10 +25,19 @@ class Brand(db.Model):
         return db.session.query(Brand).all()
 
     def save(self):
-        if self.id is None:
-            db.session.add(self)
-        db.session.commit()
-        return True
+        try:
+            if self.id is None:
+                db.session.add(self)
+            db.session.commit()
+        except Exception as e:
+            raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
+
+    def delete(self):
+        db.session.delete(self)
+        try:
+            db.session.commit()
+        except Exception as e:
+            raise Exception("Une erreur s'est produite lors de la suppression : {}".format(str(e)))
 
 
 @event.listens_for(Brand, 'before_update')
