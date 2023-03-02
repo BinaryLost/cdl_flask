@@ -8,3 +8,4 @@ class AppConfig:
     SECRET_KEY = 'your_secret_key'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://hag:hagisgood@localhost/cdl'
     CORS_ORIGINS = ['http://localhost:5173']
+    WTF_CSRF_ENABLED = False
