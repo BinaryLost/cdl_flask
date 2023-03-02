@@ -17,7 +17,7 @@ def create_brand():
     try:
         form = BrandForm(request.form)
         if form.validate():
-            brand = Brand(name=form.name.data)
+            form.populate_obj(brand)
             brand.save()
             return jsonify(brand.to_dict()), 201
         else:
