@@ -8,13 +8,14 @@ brandBluePrint = Blueprint('brand', __name__)
 
 @brandBluePrint.route('/brand', methods=['GET'])
 def list_brands():
-    brands = Brand.query.all()
+    brands = Brand.get_all()
     return jsonify([brand.to_dict() for brand in brands])
 
 
 @brandBluePrint.route('/brand', methods=['POST'])
 def create_brand():
     try:
+        brand = Brand()
         form = BrandForm(request.form)
         if form.validate():
             form.populate_obj(brand)
