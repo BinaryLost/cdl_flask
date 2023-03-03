@@ -45,7 +45,8 @@ def update_category(category_id):
     if category is None:
         abort(404)
     try:
-        form = CategoryFormEdit(request.form, category=category, partial=True)
+        print(request.form)
+        form = CategoryFormEdit(request.form, category=category)
         if form.validate():
             form.populate_obj(category)
             category.save()

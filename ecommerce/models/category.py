@@ -47,7 +47,10 @@ class Category(db.Model):
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
     def delete(self):
+        if self.has_children():
+            raise Exception("La catégorie de ne doit pas être parent d'une autre catégorie")
         db.session.delete(self)
+
         try:
             db.session.commit()
         except Exception as e:
@@ -60,6 +63,9 @@ class Category(db.Model):
             category = category.category_parent
             ancestors.append(category.id)
         return ancestors
+
+    def has_children(self):
+        return bool(self.category_children)
 
 
 @event.listens_for(Category, 'before_update')
