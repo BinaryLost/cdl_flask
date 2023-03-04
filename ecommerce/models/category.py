@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, DateTime, event
 from sqlalchemy.orm import relationship
 from ecommerce.app import db
 from .categoryImage import CategoryImage
+from werkzeug.exceptions import BadRequest
 
 
 class Category(db.Model):
@@ -48,7 +49,7 @@ class Category(db.Model):
 
     def delete(self):
         if self.has_children():
-            raise Exception("La catégorie de ne doit pas être parent d'une autre catégorie")
+            raise BadRequest("La catégorie de ne doit pas être parent d'une autre catégorie")
         db.session.delete(self)
 
         try:

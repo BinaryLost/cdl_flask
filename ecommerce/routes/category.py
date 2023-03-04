@@ -2,14 +2,20 @@ from flask import Blueprint, jsonify, request, abort
 from ecommerce.config import AppConfig as config
 from ecommerce.models.category import Category
 from ecommerce.forms.category import CategoryFormCreate, CategoryFormEdit
+from werkzeug.exceptions import BadRequest, NotFound
+from ecommerce.errors import convert_form_errors_to_string
+from http import HTTPStatus
 
 categoryBluePrint = Blueprint('category', __name__)
 
 
 @categoryBluePrint.route('/category', methods=['GET'])
 def list_categories():
-    categories = Category.query.all()
-    return jsonify([category.to_dict() for category in categories])
+    try:
+        categories = Category.query.all()
+        return jsonify([category.to_dict() for category in categories])
+    except Exception as e:
+        raise e
 
 
 @categoryBluePrint.route('/category', methods=['POST'])
@@ -20,54 +26,48 @@ def create_category():
         if form.validate():
             form.populate_obj(category)
             category.save()
-            return jsonify(category.to_dict()), 201
+            return jsonify(category.to_dict()), HTTPStatus.CREATED
         else:
-            response = {
-                'status': 'fail',
-                'errors': form.errors
-            }
-            raise Exception(response)
+            raise BadRequest(convert_form_errors_to_string(form.errors))
     except Exception as e:
-        return jsonify(e.args[0]), 400
+        raise e
 
 
 @categoryBluePrint.route('/category/<int:category_id>', methods=['GET'])
 def get_category(category_id):
-    category = Category.query.get(category_id)
-    if category is None:
-        abort(404)
-    return jsonify(category.to_dict())
+    try:
+        category = Category.query.get(category_id)
+        if category is None:
+            raise NotFound()
+        return jsonify(category.to_dict())
+    except Exception as e:
+        raise e
 
 
 @categoryBluePrint.route('/category/<int:category_id>', methods=['PATCH'])
 def update_category(category_id):
     category = Category.query.get(category_id)
     if category is None:
-        abort(404)
+        raise NotFound()
     try:
-        print(request.form)
         form = CategoryFormEdit(request.form, category=category)
         if form.validate():
             form.populate_obj(category)
             category.save()
-            return jsonify(category.to_dict()), 200
+            return jsonify(category.to_dict())
         else:
-            response = {
-                'status': 'fail',
-                'errors': form.errors
-            }
-            raise Exception(response)
+            raise BadRequest(convert_form_errors_to_string(form.errors))
     except Exception as e:
-        return jsonify(e.args[0]), 400
+        raise e
 
 
 @categoryBluePrint.route('/category/<int:category_id>', methods=['DELETE'])
 def delete_category(category_id):
     category = Category.query.get(category_id)
     if category is None:
-        abort(404)
+        raise NotFound()
     try:
         category.delete()
-        return jsonify({}), 204
+        return jsonify({}), HTTPStatus.NO_CONTENT
     except Exception as e:
-        return jsonify(e.args[0]), 400
+        raise e

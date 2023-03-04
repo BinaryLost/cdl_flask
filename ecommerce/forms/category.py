@@ -24,6 +24,11 @@ class CategoryFormEdit(FlaskForm):
         super(CategoryFormEdit, self).__init__(*args, **kwargs)
         self.category = category
 
+    def validate_name(self, field):
+        category = Category.query.filter(Category.name.ilike(field.data)).first()
+        if category and category.id != int(self.category.id):
+            raise validators.ValidationError('Name already exists.')
+
     def validate_category_parent_id(self, field):
         category_parent_id = field.data
         if category_parent_id == self.category.id:
