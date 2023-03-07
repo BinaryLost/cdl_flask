@@ -35,3 +35,11 @@ def internal_server_error(error):
         'errors': 'Internal Server Error'
     }
     return jsonify(response), HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+def limit_error(e):
+    response = {
+        'status': 'error',
+        'errors': 'File too large'
+    }
+    return jsonify(response), HTTPStatus.REQUEST_ENTITY_TOO_LARGE

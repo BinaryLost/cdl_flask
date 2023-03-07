@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from ecommerce.app import db
 from .categoryImage import CategoryImage
 from werkzeug.exceptions import BadRequest
+import base64
 
 
 class Category(db.Model):
@@ -27,9 +28,9 @@ class Category(db.Model):
             'name': self.name,
             'final': self.final,
             'active': self.active,
-            'image_url': self.image.url if self.image else None,
             'category_parent_id': self.category_parent_id,
-            'ancestors': self.get_ancestors()
+            'ancestors': self.get_ancestors(),
+            'image': self.image.to_dict() if self.image else None,
         }
 
     def __repr__(self):
@@ -47,9 +48,11 @@ class Category(db.Model):
         except Exception as e:
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
+
     def delete(self):
         if self.has_children():
             raise BadRequest("La catégorie de ne doit pas être parent d'une autre catégorie")
+        CategoryImage.delete_category_image(self.id)
         db.session.delete(self)
 
         try:
@@ -69,6 +72,3 @@ class Category(db.Model):
         return bool(self.category_children)
 
 
-@event.listens_for(Category, 'before_update')
-def receive_before_update(mapper, connection, target):
-    target.date_updated = datetime.utcnow()

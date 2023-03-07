@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request, abort
-from ecommerce.config import AppConfig as config
 from ecommerce.models.brand import Brand
 from ecommerce.forms.brand import BrandForm
 from werkzeug.exceptions import BadRequest, NotFound
