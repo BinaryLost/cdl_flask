@@ -48,7 +48,6 @@ class Category(db.Model):
         except Exception as e:
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
-
     def delete(self):
         if self.has_children():
             raise BadRequest("La catégorie de ne doit pas être parent d'une autre catégorie")
@@ -71,4 +70,27 @@ class Category(db.Model):
     def has_children(self):
         return bool(self.category_children)
 
+    @staticmethod
+    def get_category_tree(category_id=None):
+        categories = []
+        if category_id is None:
+            top_level_categories = Category.query.filter_by(category_parent_id=None).all()
+        else:
+            category = Category.query.get(category_id)
+            if category is None:
+                raise BadRequest("La catégorie donnée n'existe pas")
+            top_level_categories = category.category_children
 
+        for category in top_level_categories:
+            category_dict = {
+                'id': category.id,
+                'name': category.name,
+                'final': category.final,
+                'active': category.active,
+                'category_parent_id': category.category_parent_id
+            }
+            if category.has_children():
+                category_dict['children'] = Category.get_category_tree(category.id)
+            categories.append(category_dict)
+
+        return categories

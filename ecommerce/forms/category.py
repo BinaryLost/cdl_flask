@@ -53,9 +53,13 @@ class CategoryParentFormEdit(FlaskForm):
         category_parent_id = field.data
         if category_parent_id == self.category.id:
             raise validators.ValidationError('Parent cannot be category itself')
+        if category_parent_id == self.category.id:
+            raise validators.ValidationError('Parent cannot be category itself')
         category_parent = Category.query.get(category_parent_id)
         if category_parent is None:
             raise validators.ValidationError('Category parent does not exist')
+        if category_parent.final:
+            raise validators.ValidationError('Category parent cannot be final')
         if self.category.id in category_parent.get_ancestors():
             raise validators.ValidationError(
                 'La catégorie parent sélectionnée ne doit pas être un ancêtre de cette catégorie.')

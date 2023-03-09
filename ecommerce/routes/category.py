@@ -20,6 +20,15 @@ def list_categories():
         raise e
 
 
+@categoryBluePrint.route('/category/tree', methods=['GET'])
+def list_category_tree():
+    try:
+        categories = Category.get_category_tree()
+        return jsonify(categories)
+    except Exception as e:
+        raise e
+
+
 @categoryBluePrint.route('/category', methods=['POST'])
 def create_category():
     try:
