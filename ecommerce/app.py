@@ -1,13 +1,17 @@
 from flask import Flask
+from flask_migrate import Migrate
 from flask_cors import CORS
 from .config import Config, ProductionConfig, DevelopmentConfig
 from .models.db import db
 from .routes.brand import brandBluePrint
 from .routes.category import categoryBluePrint
+from .routes.product import productBluePrint
 from ecommerce.errors import not_found, internal_server_error, bad_request, limit_error
 import os
 
+
 app = Flask(__name__)
+migrate = Migrate(app, db)
 
 if os.environ.get('FLASK_ENV') == 'production':
     envConfig = ProductionConfig
@@ -29,6 +33,7 @@ app.register_error_handler(413, limit_error)
 
 app.register_blueprint(brandBluePrint)
 app.register_blueprint(categoryBluePrint)
+app.register_blueprint(productBluePrint)
 
 if __name__ == '__main__':
     app.run()
