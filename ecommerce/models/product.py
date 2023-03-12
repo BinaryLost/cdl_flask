@@ -2,21 +2,10 @@ import datetime
 from sqlalchemy import Column, Integer, String, Float, Text, DateTime, Boolean, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from ecommerce.models.category import Category
+from ecommerce.models.productImage import ProductImage
 from ecommerce.models.brand import Brand
 
 from ecommerce.app import db
-
-COLOR_CHOICES = {
-    "red": "Rouge",
-    "blue": "Bleu",
-    "green": "Vert",
-    "black": "Noir",
-    "white": "Blanc",
-    "yellow": "Jaune",
-    "purple": "Violet",
-    "gray": "Gris",
-    "brown": "Marron",
-}
 
 accessories_table = db.Table('accessories',
                              db.Column('parent_id', db.Integer, db.ForeignKey('product.id'), primary_key=True),
@@ -25,7 +14,6 @@ accessories_table = db.Table('accessories',
 
 
 class ProductBase(db.Model):
-
     __tablename__ = "product"
 
     id = Column(Integer, primary_key=True)
@@ -72,9 +60,21 @@ class ProductBase(db.Model):
         }
         super().__init__(**kwargs)
 
-    @property
-    def attributes_dict(self):
-        return self.attributes
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date_added': self.date_added,
+            'date_updated': self.date_updated,
+            'name': self.name,
+            'description': self.description,
+            'brand': self.brand.name,
+            'price': self.price,
+            'is_accessory': self.is_accessory,
+            'accessories': [accessory.to_dict() for accessory in self.accessories],
+            'category': self.category.name,
+            'active': self.active,
+            'images': [image.to_dict() for image in self.images]
+        }
 
     def add_accessory(self, accessory):
         if accessory not in self.accessories:
@@ -84,20 +84,45 @@ class ProductBase(db.Model):
         if accessory in self.accessories:
             self.accessories.remove(accessory)
 
+    def save(self):
+        try:
+            self.update_attributes()
+            if self.id is None:
+                db.session.add(self)
+            db.session.commit()
+        except Exception as e:
+            raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
+
 
 class Shoes(ProductBase):
     __mapper_args__ = {
         "polymorphic_identity": "shoe"
     }
 
-    def __init__(self, **kwargs):
-        self.attributes.update({
-            "shoe_size": None,
-            "shoe_type": None,
-            "shoe_height": None,
-            "colors": []
-        })
+    def __init__(self, shoe_size=None, shoe_type=None, shoe_height=None, colors=None, **kwargs):
+        self.shoe_size = shoe_size
+        self.shoe_type = shoe_type
+        self.shoe_height = shoe_height
+        self.colors = colors or []
         super().__init__(**kwargs)
+
+    def to_dict(self):
+        base_dict = super().to_dict()
+        attributes_dict = {
+            "shoe_size": self.attributes["shoe_size"],
+            "shoe_type": self.attributes["shoe_type"],
+            "shoe_height": self.attributes["shoe_height"],
+            "colors": [COLOR_CHOICES[color_key] for color_key in self.attributes["colors"]]
+        }
+        return {**base_dict, **attributes_dict}
+
+    def update_attributes(self):
+        self.attributes.update({
+            "shoe_size": self.shoe_size,
+            "shoe_type": self.shoe_type,
+            "shoe_height": self.shoe_height,
+            "colors": self.colors
+        })
 
     @property
     def attributes_dict(self):

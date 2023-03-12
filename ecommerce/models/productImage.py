@@ -8,7 +8,7 @@ import base64
 class ProductImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"))
-    product = db.relationship("Product", back_populates="images")
+    product = db.relationship("ProductBase", back_populates="images")
     image = db.Column(db.LargeBinary(length=(2 ** 20) * 10 - 1), nullable=False)
     mimetype = db.Column(db.String(50), nullable=False)
     is_primary = db.Column(db.Boolean, default=False)
