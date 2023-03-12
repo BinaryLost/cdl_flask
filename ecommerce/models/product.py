@@ -26,6 +26,7 @@ class ProductBase(db.Model):
     date_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     active = Column(Boolean, default=False, nullable=False)
     name = Column(String(255), nullable=False)
+    gender = Column(String(50), nullable=False)
     description = Column(Text, nullable=True)
     brand_id = Column(Integer, ForeignKey(Brand.id))
     brand = relationship("Brand")
@@ -49,13 +50,12 @@ class ProductBase(db.Model):
     category = relationship("Category")
     images = relationship("ProductImage", back_populates="product")
     attributes = Column(JSON)
-    type = Column(String(50))
+    # type = Column(String(50))
 
-
-    __mapper_args__ = {
-        "polymorphic_on": "type",
-        "polymorphic_identity": None
-    }
+    # __mapper_args__ = {
+    #     "polymorphic_on": "type",
+    #     "polymorphic_identity": None
+    # }
 
     def __init__(self, **kwargs):
         self.type = kwargs.pop("type", None)
@@ -70,6 +70,7 @@ class ProductBase(db.Model):
             'name': self.name,
             'description': self.description,
             'brand': self.brand.name,
+            'gender': Config.GENDER[self.gender],
             'price': self.price,
             'is_accessory': self.is_accessory,
             'accessories': [accessory.to_dict() for accessory in self.accessories],
@@ -96,13 +97,13 @@ class ProductBase(db.Model):
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
 
-class Shoes(ProductBase):
-    __mapper_args__ = {
-        "polymorphic_identity": "shoe"
-    }
+class Shoe(ProductBase):
+    # __mapper_args__ = {
+    #     "polymorphic_identity": "shoe"
+    # }
 
     def __init__(self, shoe_size=None, shoe_type=None, shoe_height=None, colors=None, **kwargs):
-        kwargs["type"] = self.__mapper_args__["polymorphic_identity"]
+        # kwargs["type"] = self.__mapper_args__["polymorphic_identity"]
         self.shoe_size = shoe_size
         self.shoe_type = shoe_type
         self.shoe_height = shoe_height
@@ -127,4 +128,3 @@ class Shoes(ProductBase):
             "shoe_height": self.shoe_height,
             "colors": self.colors
         })
-

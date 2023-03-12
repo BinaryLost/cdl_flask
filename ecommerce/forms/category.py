@@ -1,5 +1,4 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileRequired, FileAllowed
 from wtforms import StringField, validators, IntegerField, BooleanField, FileField
 from ecommerce.models.category import Category
 from ecommerce.models.categoryImage import CategoryImage

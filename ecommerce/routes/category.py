@@ -20,6 +20,15 @@ def list_categories():
         raise e
 
 
+@categoryBluePrint.route('/category/final', methods=['GET'])
+def list_categories_final():
+    try:
+        categories = Category.query.filter(Category.final == True).all()
+        return jsonify([category.to_dict() for category in categories])
+    except Exception as e:
+        raise e
+
+
 @categoryBluePrint.route('/category/tree', methods=['GET'])
 def list_category_tree():
     try:
