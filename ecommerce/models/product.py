@@ -4,8 +4,13 @@ from sqlalchemy.orm import relationship
 from ecommerce.models.category import Category
 from ecommerce.models.productImage import ProductImage
 from ecommerce.models.brand import Brand
+from sqlalchemy.orm import mapper
+from ecommerce.config import Config
 
 from ecommerce.app import db
+
+COLOR_CHOICES = Config.COLOR_CHOICES
+GENDER = Config.GENDER
 
 accessories_table = db.Table('accessories',
                              db.Column('parent_id', db.Integer, db.ForeignKey('product.id'), primary_key=True),
@@ -19,11 +24,12 @@ class ProductBase(db.Model):
     id = Column(Integer, primary_key=True)
     date_added = Column(DateTime, default=datetime.datetime.utcnow)
     date_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    name = Column(String(255))
-    description = Column(Text)
+    active = Column(Boolean, default=False, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
     brand_id = Column(Integer, ForeignKey(Brand.id))
     brand = relationship("Brand")
-    price = Column(Float)
+    price = Column(Float, default=0, nullable=False)
     is_accessory = Column(Boolean, default=False)
     accessories = relationship(
         'ProductBase',
@@ -32,7 +38,6 @@ class ProductBase(db.Model):
         secondaryjoin=id == accessories_table.c.accessory_id,
         back_populates='accessory_of'
     )
-
     accessory_of = relationship(
         'ProductBase',
         secondary=accessories_table,
@@ -42,22 +47,19 @@ class ProductBase(db.Model):
     )
     category_id = Column(Integer, ForeignKey(Category.id))
     category = relationship("Category")
-    active = Column(Boolean, default=True)
     images = relationship("ProductImage", back_populates="product")
     attributes = Column(JSON)
+    type = Column(String(50))
+
 
     __mapper_args__ = {
-        "polymorphic_on": attributes["type"],
-        "polymorphic_identity": "product"
+        "polymorphic_on": "type",
+        "polymorphic_identity": None
     }
 
     def __init__(self, **kwargs):
-        self.attributes = {
-            "shoe_size": None,
-            "shoe_type": None,
-            "shoe_height": None,
-            "colors": []
-        }
+        self.type = kwargs.pop("type", None)
+        self.attributes = kwargs.pop("attributes", {})
         super().__init__(**kwargs)
 
     def to_dict(self):
@@ -73,7 +75,7 @@ class ProductBase(db.Model):
             'accessories': [accessory.to_dict() for accessory in self.accessories],
             'category': self.category.name,
             'active': self.active,
-            'images': [image.to_dict() for image in self.images]
+            'images': [image.to_dict() for image in self.images],
         }
 
     def add_accessory(self, accessory):
@@ -100,6 +102,7 @@ class Shoes(ProductBase):
     }
 
     def __init__(self, shoe_size=None, shoe_type=None, shoe_height=None, colors=None, **kwargs):
+        kwargs["type"] = self.__mapper_args__["polymorphic_identity"]
         self.shoe_size = shoe_size
         self.shoe_type = shoe_type
         self.shoe_height = shoe_height
@@ -110,11 +113,12 @@ class Shoes(ProductBase):
         base_dict = super().to_dict()
         attributes_dict = {
             "shoe_size": self.attributes["shoe_size"],
-            "shoe_type": self.attributes["shoe_type"],
-            "shoe_height": self.attributes["shoe_height"],
+            "shoe_type": Config.SHOE_TYPE[self.attributes["shoe_type"]],
+            "shoe_height": Config.SHOE_HEIGHT[self.attributes["shoe_height"]],
             "colors": [COLOR_CHOICES[color_key] for color_key in self.attributes["colors"]]
         }
-        return {**base_dict, **attributes_dict}
+        base_dict["attributes"] = attributes_dict
+        return base_dict
 
     def update_attributes(self):
         self.attributes.update({
@@ -124,11 +128,3 @@ class Shoes(ProductBase):
             "colors": self.colors
         })
 
-    @property
-    def attributes_dict(self):
-        return {
-            "shoe_size": self.attributes["shoe_size"],
-            "shoe_type": self.attributes["shoe_type"],
-            "shoe_height": self.attributes["shoe_height"],
-            "colors": [COLOR_CHOICES[color_key] for color_key in self.attributes["colors"]]
-        }

@@ -12,6 +12,7 @@ class Config:
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     IMAGES_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif']
     COLOR_CHOICES = {
+        "nocolor": "No Color",
         "red": "Rouge",
         "blue": "Bleu",
         "green": "Vert",
@@ -21,8 +22,11 @@ class Config:
         "purple": "Violet",
         "gray": "Gris",
         "brown": "Marron",
-    },
+    }
+    GENDER = {"man": "Homme", "woman": "Femme", "mixed": "Mixte"}
     SHOE_SIZE = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+    SHOE_HEIGHT = {'high': 'Haute', 'low': 'Basse'}
+    SHOE_TYPE = {'basket': 'Basket', 'low': 'Basse'}
 
 
 class ProductionConfig(Config):
