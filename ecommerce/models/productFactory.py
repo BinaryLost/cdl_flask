@@ -10,8 +10,8 @@ class ProductFactory:
         "shoe": Shoe,
     }
 
-    def set_product_class(self, category_name):
-        self.product_class = self.TYPES.get(category_name)
+    def set_product_class(self, category):
+        self.product_class = self.TYPES.get(category.name)
 
     def create_product(self, **kwargs):
         if self.product_class is None:

@@ -33,9 +33,11 @@ class Config:
     }
 
     GENDER = {"man": "Homme", "woman": "Femme", "mixed": "Mixte"}
-    SHOE_SIZE = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+    SHOE_SIZE = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]
     SHOE_HEIGHT = {'high': 'Haute', 'low': 'Basse'}
-    SHOE_TYPE = {'basket': 'Basket', 'low': 'Basse', 'mid': 'Mi-Haute'}
+    SHOE_TYPE = {'sneaker': 'Sneaker', 'shoe': 'Chaussure', 'sandal': 'Sandale'}
+    JEAN_SIZE = [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+    LETTER_SIZE = ['S', 'M', 'L', 'XL', 'XXL']
 
 
 class ProductionConfig(Config):

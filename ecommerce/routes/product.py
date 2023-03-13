@@ -30,30 +30,24 @@ def create_product():
         form = ProductFormCreate(request.form)
         if form.validate():
             product_factory = ProductFactory()
-            product_factory.set_product_class(category.name)
+            product_factory.set_product_class(category)
             product = product_factory.create_product()
             form.populate_obj(product)
             product.save()
-            return jsonify(product_class.to_dict()), HTTPStatus.CREATED
+            return jsonify(product.to_dict()), HTTPStatus.CREATED
         else:
             raise BadRequest(convert_form_errors_to_string(form.errors))
-        # type_product = "shoe"
-        # product_class = ProductFactory.TYPES.get(type_product)
-        # if product_class is None:
-        #     raise BadRequest(f"Type de produit inconnu: {type_product}")
-        # new_shoe = product_class(
-        #     name="Ma nouvelle NIKE",
-        #     description="Une chaussure de qualité supérieure",
-        #     brand_id=1,
-        #     price=100.0,
-        #     gender="man",
-        #     category_id=1,
-        #     shoe_size=44,
-        #     shoe_type="basket",
-        #     shoe_height="high",
-        #     colors=["red", "white"]
-        # )
-        # new_shoe.save()
-        return jsonify("dd"), HTTPStatus.CREATED
     except Exception as e:
         raise e
+
+
+@productBluePrint.route('/product/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    try:
+        product = ProductBase.query.get(product_id)
+        if product is None:
+            raise NotFound()
+        return jsonify(product.to_dict())
+    except Exception as e:
+        raise e
+

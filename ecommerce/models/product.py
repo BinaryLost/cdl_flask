@@ -26,7 +26,7 @@ class ProductBase(db.Model):
     date_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     active = Column(Boolean, default=False, nullable=False)
     name = Column(String(255), nullable=False)
-    gender = Column(String(50), nullable=False)
+    gender = Column(String(50), nullable=False, default='mixed')
     description = Column(Text, nullable=True)
     brand_id = Column(Integer, ForeignKey(Brand.id))
     brand = relationship("Brand")
@@ -50,12 +50,6 @@ class ProductBase(db.Model):
     category = relationship("Category")
     images = relationship("ProductImage", back_populates="product")
     attributes = Column(JSON)
-    # type = Column(String(50))
-
-    # __mapper_args__ = {
-    #     "polymorphic_on": "type",
-    #     "polymorphic_identity": None
-    # }
 
     def __init__(self, **kwargs):
         self.type = kwargs.pop("type", None)
@@ -70,7 +64,7 @@ class ProductBase(db.Model):
             'name': self.name,
             'description': self.description,
             'brand': self.brand.name,
-            'gender': Config.GENDER[self.gender],
+            'gender': Config.GENDER[self.gender] if self.gender else None,
             'price': self.price,
             'is_accessory': self.is_accessory,
             'accessories': [accessory.to_dict() for accessory in self.accessories],
@@ -96,14 +90,20 @@ class ProductBase(db.Model):
         except Exception as e:
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
+    def delete(self):
+        try:
+            raise Exception("action non autorisée")
+            for accessory in self.accessories:
+                self.remove_accessory(accessory)
+            for image in self.images:
+                self.images.remove(image)
+            db.session.delete(self)
+            db.session.commit()
+        except Exception as e:
+            raise Exception("Une erreur s'est produite lors de la suppression : {}".format(str(e)))
 
 class Shoe(ProductBase):
-    # __mapper_args__ = {
-    #     "polymorphic_identity": "shoe"
-    # }
-
     def __init__(self, shoe_size=None, shoe_type=None, shoe_height=None, colors=None, **kwargs):
-        # kwargs["type"] = self.__mapper_args__["polymorphic_identity"]
         self.shoe_size = shoe_size
         self.shoe_type = shoe_type
         self.shoe_height = shoe_height
@@ -114,8 +114,8 @@ class Shoe(ProductBase):
         base_dict = super().to_dict()
         attributes_dict = {
             "shoe_size": self.attributes["shoe_size"],
-            "shoe_type": Config.SHOE_TYPE[self.attributes["shoe_type"]],
-            "shoe_height": Config.SHOE_HEIGHT[self.attributes["shoe_height"]],
+            "shoe_type": Config.SHOE_TYPE[self.attributes["shoe_type"]] if self.attributes["shoe_type"] else None,
+            "shoe_height": Config.SHOE_TYPE[self.attributes["shoe_height"]] if self.attributes["shoe_height"] else None,
             "colors": [COLOR_CHOICES[color_key] for color_key in self.attributes["colors"]]
         }
         base_dict["attributes"] = attributes_dict
