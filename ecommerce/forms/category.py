@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, validators, IntegerField, BooleanField, FileField
 from ecommerce.models.category import Category
 from ecommerce.models.categoryImage import CategoryImage
+from ecommerce.models.productFactory import ProductFactory
 
 
 class CategoryFormCreate(FlaskForm):
@@ -33,6 +34,11 @@ class CategoryFormEdit(FlaskForm):
         if field.data:
             if self.category.has_children():
                 raise validators.ValidationError('Final category cannot have chidren.')
+            if self.category.name not in ProductFactory.TYPES:
+                raise validators.ValidationError(f'No final class {self.category.name} detected in the code')
+        else:
+            if self.category.has_products():
+                raise validators.ValidationError('Must be final because has products.')
 
     def validate_active(self, field):
         if field.data:
@@ -77,5 +83,13 @@ class CategoryFormActivate(FlaskForm):
         if not self.category.image and self.active.data:
             self.active.errors.append('Image is mandatory')
             return False
+        if not self.active.data and self.category.has_children(active=True):
+            self.active.errors.append('Impossible because has ACTIVE children')
+            return False
+        if self.active.data and self.category.has_inactive_ancestors():
+            self.active.errors.append('Parent categories must be active also')
+            return False
+        if not self.active.data and self.category.has_products(active=True):
+            self.active.errors.append('Impossible because has ACTIVE products')
+            return False
         return True
-

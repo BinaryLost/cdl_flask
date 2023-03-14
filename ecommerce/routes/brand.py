@@ -70,3 +70,5 @@ def delete_brand(brand_id):
         return jsonify({}), HTTPStatus.NO_CONTENT
     except Exception as e:
         raise e
+
+

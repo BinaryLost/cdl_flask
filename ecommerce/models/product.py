@@ -29,7 +29,7 @@ class ProductBase(db.Model):
     gender = Column(String(50), nullable=False, default='mixed')
     description = Column(Text, nullable=True)
     brand_id = Column(Integer, ForeignKey(Brand.id))
-    brand = relationship("Brand")
+    brand = relationship("Brand", backref="products_in_brand")
     price = Column(Float, default=0, nullable=False)
     is_accessory = Column(Boolean, default=False)
     accessories = relationship(
@@ -47,7 +47,7 @@ class ProductBase(db.Model):
         back_populates='accessories'
     )
     category_id = Column(Integer, ForeignKey(Category.id))
-    category = relationship("Category")
+    category = relationship("Category", backref="products_in_category")
     images = relationship("ProductImage", back_populates="product")
     attributes = Column(JSON)
 
@@ -101,6 +101,7 @@ class ProductBase(db.Model):
             db.session.commit()
         except Exception as e:
             raise Exception("Une erreur s'est produite lors de la suppression : {}".format(str(e)))
+
 
 class Shoe(ProductBase):
     def __init__(self, shoe_size=None, shoe_type=None, shoe_height=None, colors=None, **kwargs):

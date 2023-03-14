@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, event
 from ecommerce.app import db
+from werkzeug.exceptions import BadRequest
 
 
 class Brand(db.Model):
@@ -33,11 +34,17 @@ class Brand(db.Model):
             raise Exception("Une erreur s'est produite lors de la sauvegarde : {}".format(str(e)))
 
     def delete(self):
+        if self.has_products():
+            raise BadRequest("Cannot be deleted because has products")
         db.session.delete(self)
+
         try:
             db.session.commit()
         except Exception as e:
             raise Exception("Une erreur s'est produite lors de la suppression : {}".format(str(e)))
+
+    def has_products(self):
+        return bool(self.products_in_brand)
 
 
 @event.listens_for(Brand, 'before_update')

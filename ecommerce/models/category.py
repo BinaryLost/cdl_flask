@@ -41,6 +41,8 @@ class Category(db.Model):
         return db.session.query(Category).all()
 
     def save(self):
+        if self.name:
+            self.name = self.name.lower()
         try:
             if self.id is None:
                 db.session.add(self)
@@ -51,6 +53,8 @@ class Category(db.Model):
     def delete(self):
         if self.has_children():
             raise BadRequest("La catégorie de ne doit pas être parent d'une autre catégorie")
+        if self.has_products():
+            raise BadRequest("Cannot be deleted because has products")
         CategoryImage.delete_category_image(self.id)
         db.session.delete(self)
 
@@ -64,11 +68,28 @@ class Category(db.Model):
         category = self
         while category.category_parent:
             category = category.category_parent
-            ancestors.append(category.id)
+            ancestors.append({
+                'id': category.id,
+                'name': category.name,
+                'final': category.final,
+                'active': category.active,
+                'category_parent_id': category.category_parent_id
+            })
         return ancestors
 
-    def has_children(self):
+    def has_inactive_ancestors(self):
+        return any(not category['active'] for category in self.get_ancestors())
+
+    def has_children(self, active=False):
+        if active:
+            return bool(Category.query.filter_by(category_parent_id=self.id, active=True).all())
         return bool(self.category_children)
+
+    def has_products(self, active=False):
+        if active:
+            return any(product.active for product in self.products_in_category if product.active)
+        else:
+            return bool(self.products_in_category)
 
     @staticmethod
     def get_category_tree(category_id=None):
